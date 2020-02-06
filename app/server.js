@@ -1,8 +1,5 @@
-require('dotenv').config();
-
 const express = require('express');
 const SQSService = require('./services/sqs');
-const SQSWorker = require('./workers/sqs');
 
 const app = express();
 app.use(express.json());
@@ -26,5 +23,4 @@ app.post('/message', async (req, res) => {
 
 app.listen(3000, () => {
   console.log('server listening');
-  SQSWorker.start();
 });
