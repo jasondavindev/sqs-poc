@@ -1,6 +1,25 @@
 version: '3.4'
 
 services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack
+    ports:
+      - '4567-4599:4567-4599'
+      - '8055:8080'
+    environment:
+      - SERVICES=sqs,sns
+      - DEBUG=1
+      - DATA_DIR=/localstack/data
+      - PORT_WEB_UI=8080
+      - LAMBDA_EXECUTOR=
+      - KINESIS_ERROR_PROBABILITY=
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ${PWD}/docker/volumes/localstack:/localstack
+    networks:
+      - microservices
+
   app:
     image: node:10.16.0
     container_name: application
@@ -8,12 +27,15 @@ services:
     volumes:
       - ${PWD}/app:/home/node/app
       - ${PWD}/node_modules:/home/node/app/node_modules
-      - ${PWD}/credentials:/home/node/.aws/credentials
     working_dir: /home/node/app
     command: node server.js
     networks:
       - microservices
     user: node
+    ports:
+      - 3000:3000
+    depends_on:
+      - localstack
 
   worker-1:
     image: node:10.16.0
@@ -22,12 +44,13 @@ services:
     volumes:
       - ${PWD}/workers:/home/node/app
       - ${PWD}/node_modules:/home/node/app/node_modules
-      - ${PWD}/credentials:/home/node/.aws/credentials
     working_dir: /home/node/app
     command: node server.js
     networks:
       - microservices
     user: node
+    depends_on:
+      - localstack
 
 networks:
   microservices:
